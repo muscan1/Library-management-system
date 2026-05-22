@@ -1,5 +1,7 @@
 # Library-management-system
 CREATORS: Jane, Lynn, Susan, Paul, Morgan, Muscan
+
+
 A modern, responsive, and lightweight Library Management System built with a **Flask (Python)** backend, a **MySQL** database, and a vanilla **HTML5 / CSS3 / JavaScript** frontend. 
 
 This system provides a seamless experience for library users to browse books, register accounts, and borrow titles dynamically, alongside an intuitive interface for administrators to add new books to the database.
