@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Library Dashboard </title>
+
+  <style>
+    *{
+      margin:0;
+      padding:0;
+      box-sizing:border-box;
+      font-family: Arial, sans-serif;
+    }
+
+    body{
+      background:#f4f6fb;
+      /* Adjusted padding to perfectly fit fixed navbar */
+      padding-top: 70px; 
+    }
+
+    /* TOP NAVBAR */
+    .navbar{
+      width:100%;
+      height:70px;
+      background:#ffffff;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      padding:0 20px;
+      box-shadow:0 2px 8px rgba(0,0,0,0.04);
+      position:fixed;
+      top:0;
+      left:0;
+      z-index:1000;
+      gap: 15px;
+    }
+
+    .navbar-brand{
+      font-size:26px;
+      font-weight:bold;
+      color:#1e3a8a;
+      text-decoration:none;
+      flex-shrink: 0;
+    }
+
+    /* Right utilities wrapper to hold search + menu/hamburger together */
+    .nav-right {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      flex-grow: 1;
+      justify-content: flex-end;
+    }
+
+    /* SEARCH BAR CONTAINER */
+    .search-container {
+      border-radius: 18px;
+      display: flex;
+      align-items: center;
+      width: 100%;
+      /* Shrunk width constraint down to 180px */
+      max-width: 180px; 
+      margin-left: auto;
+    
+    }
+
+    .search-input {
+      width: 1220%;
+      padding: 6px 10px;
+      font-size: 13px;
+      border: 1px solid #cbd5e1;
+      border-right: none;
+      border-radius: 4px 0 0 4px;
+      outline: none;
+      transition: border-color 0.2s;
+        border-radius: 18px;
+    }
+
+    .search-input:focus {
+      border-color: #2563eb;
+    }
+
+    .search-btn {
+      padding: 6px 12px;
+      background: #2563eb;
+      color: white;
+      border: 1px solid #2563eb;
+      border-radius: 0 4px 4px 0;
+      cursor: pointer;
+      font-size: 13px;
+      transition: background 0.2s;
+    }
+
+    .search-btn:hover {
+      background: #1d4ed8;
+    }
+
+    /* NAVBAR MENU FOR LARGE SCREENS */
+    .navbar-menu {
+      display: flex;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+
+    .navbar-menu a {
+      color: #1e3a8a;
+      text-decoration: none;
+      padding: 10px 15px;
+      font-size: 16px;
+      font-weight: 500;
+      border-radius: 4px;
+      transition: 0.2s;
+      background: transparent; 
+    }
+
+    /* Active styling for Desktop */
+    .navbar-menu a.active {
+      background: #2563eb !important; 
+      color: #ffffff !important;
+       border-radius: 18px;
+    }
+
+    /* HAMBURGER */
+    .hamburger{
+      font-size:30px;
+      background:none;
+      border:none;
+      cursor:pointer;
+      color:#1e3a8a;
+      display:none; 
+    }
+
+    /* SIDEBAR */
+    .sidebar{
+      display: none; 
+    }
+
+    /* RESPONSIVE DESIGN FOR MOBILE & TABLETS */
+    @media(max-width:768px){
+      .navbar-menu {
+        display: none;
+      }
+
+      .hamburger{
+        display: block;
+      }
+
+      /* SIDEBAR: Placed right below the 70px navbar to drop any gaps */
+      .sidebar{
+        display: block;
+        position:fixed;
+        top:70px; 
+        left:-220px; 
+        width:220px;
+        height:calc(100vh - 70px);
+        background:linear-gradient(to bottom,#2563eb,#1d4ed8);
+        padding-top:20px;
+        transition:0.3s ease;
+        z-index:999; 
+      }
+
+      .sidebar.active{
+        left:0;
+      }
+
+      .sidebar a{
+        display:block;
+        color:white;
+        text-decoration:none;
+        padding:18px 25px;
+        font-size:18px;
+        transition:0.2s;
+        background: transparent; 
+      }
+
+      /* Active styling for Mobile Sidebar */
+      .sidebar a.active{
+        background: #ffffff !important;
+        color: #1d4ed8 !important;
+        font-weight: bold;
+      }
+    }
+
+    @media(max-width: 480px) {
+      .navbar-brand {
+        font-size: 20px;
+      }
+      /* On very small devices, let it scale slightly down but stay functional */
+      .search-container {
+        max-width: 140px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- NAVBAR -->
+  <nav class="navbar">
+    <a href="signup&login.html" class="navbar-brand">Booklib</a>
+
+    <!-- Container keeping Search and Links right-aligned -->
+    <div class="nav-right">
+      <!-- SEARCH CONTAINER (Moved inside navbar, right-aligned) -->
+      
+      <!-- Desktop Navigation Links -->
+      <div class="navbar-menu" id="desktopMenu">
+        <a href="index.html" class="nav-link active" onclick="setActiveLink(this)">Home</a>
+        <a href="Dashboard.html" class="nav-link" onclick="setActiveLink(this)">Add Book</a>
+        <a href="signup&login.html" class="nav-link" onclick="setActiveLink(this)">Signup</a>
+        <a href="admin.html" class="nav-link" onclick="setActiveLink(this)">Admin Management</a>
+        <a href="logs.html" class="nav-link" onclick="setActiveLink(this)">Logs</a>
+      </div>
+
+      
+      <!-- Mobile Hamburger Button -->
+      <button class="hamburger" onclick="toggleMenu()">
+        &#9776;
+      </button>
+    </div>
+  </nav>
+
+  <div class="search-container">
+        <input type="text" class="search-input" placeholder="Search..." id="searchInput">
+        <button class="search-btn" onclick="handleSearch()">Search</button>
+      </div>
+
+
+  <!-- Mobile Sidebar Menu -->
+  <div class="sidebar" id="sidebar">
+    <a href="index.html" class="nav-link active" onclick="setActiveLink(this)">Home</a>
+    <a href="Dashboard.html" class="nav-link" onclick="setActiveLink(this)">Add Book</a>
+    <a href="signup&login.html" class="nav-link" onclick="setActiveLink(this)">Signup</a>
+    <a href="admin.html" class="nav-link" onclick="setActiveLink(this)">Admin Management</a>
+    <a href="logs.html" class="nav-link" onclick="setActiveLink(this)">Logs</a>
+  </div>
+
+  <main style="max-width: 800px; margin: 40px auto; padding: 20px;">
+    <div style="background: white; padding: 30px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+      <h2 style="color: #1e3a8a; margin-bottom: 20px;">Add a New Book</h2>
+      
+      <form id="addBookForm">
+        <div style="margin-bottom: 15px;">
+          <label for="title" style="display: block; margin-bottom: 6px; font-weight: bold; color: #475569;">Book Title</label>
+          <input type="text" id="title" required placeholder="e.g., The Great Gatsby" style="width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px;">
+        </div>
+
+        <div style="margin-bottom: 15px;">
+          <label for="author" style="display: block; margin-bottom: 6px; font-weight: bold; color: #475569;">Author</label>
+          <input type="text" id="author" required placeholder="e.g., F. Scott Fitzgerald" style="width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px;">
+        </div>
+
+        <div style="margin-bottom: 15px;">
+          <label for="isbn" style="display: block; margin-bottom: 6px; font-weight: bold; color: #475569;">ISBN</label>
+          <input type="text" id="isbn" required placeholder="e.g., 9780743273565" style="width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px;">
+        </div>
+
+        <div style="margin-bottom: 15px;">
+          <label for="category" style="display: block; margin-bottom: 6px; font-weight: bold; color: #475569;">Category</label>
+          <input type="text" id="category" required placeholder="e.g., Fiction" style="width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px;">
+        </div>
+
+        <div style="margin-bottom: 15px;">
+          <label for="copies" style="display: block; margin-bottom: 6px; font-weight: bold; color: #475569;">Number of Copies</label>
+          <input type="number" id="copies" value="1" min="1" required style="width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px;">
+        </div>
+
+        <div style="display: flex; gap: 12px; margin-top: 20px;">
+          <button type="submit" style="background: #2563eb; color: white; padding: 12px 24px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold;">Add Book</button>
+          <button type="button" onclick="resetForm()" style="background: #e2e8f0; color: #475569; padding: 12px 24px; border: none; border-radius: 8px; cursor: pointer;">Clear</button>
+        </div>
+      </form>
+
+      <div id="message" style="margin-top: 20px; padding: 12px; border-radius: 8px; display: none; font-weight: bold;"></div>
+    </div>
+  </main>
+
+  <script>
+    function toggleMenu() {
+      document.getElementById("sidebar")
+        .classList.toggle("active");
+    }
+
+    function setActiveLink(clickedElement) {
+      const links = document.querySelectorAll('.nav-link');
+      
+      links.forEach(link => {
+        link.classList.remove('active');
+      });
+
+      const targetText = clickedElement.innerText;
+      links.forEach(link => {
+        if(link.innerText === targetText) {
+          link.classList.add('active');
+        }
+      });
+
+      document.getElementById("sidebar").classList.remove("active");
+    }
+
+    function handleSearch() {
+      const query = document.getElementById("searchInput").value;
+      if(query.trim() !== "") {
+        alert("Searching for: " + query);
+      } else {
+        alert("Please enter a search term.");
+      }
+    }
+
+    document.getElementById("searchInput").addEventListener("keypress", function(event) {
+      if (event.key === "Enter") {
+        handleSearch();
+      }
+    });
+
+    function resetForm() {
+      document.getElementById("addBookForm").reset();
+      document.getElementById("message").style.display = 'none';
+    }
+
+    function showMessage(text, type) {
+      const messageDiv = document.getElementById("message");
+      messageDiv.innerText = text;
+      messageDiv.style.display = 'block';
+      messageDiv.style.backgroundColor = type === 'success' ? '#d4edda' : '#f8d7da';
+      messageDiv.style.color = type === 'success' ? '#155724' : '#721c24';
+    }
+
+    document.getElementById("addBookForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const title = document.getElementById("title").value;
+      const author = document.getElementById("author").value;
+      const isbn = document.getElementById("isbn").value;
+      const category = document.getElementById("category").value;
+      const copies = document.getElementById("copies").value;
+
+      try {
+        const response = await fetch("http://localhost:3000/api/books", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ title, author, isbn, category, copies })
+        });
+
+        const result = await response.json();
+
+        if (response.ok) {
+          showMessage("✅ Book added successfully!", "success");
+          resetForm();
+        } else {
+          showMessage("❌ Error: " + (result.error || "Could not add book"), "error");
+        }
+      } catch (error) {
+        showMessage("❌ Error: " + error.message, "error");
+      }
+    });
+  </script>
+
+</body>
+</html>

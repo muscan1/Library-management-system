@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Library - Book Catalog</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body { 
+            font-family: Arial, sans-serif; 
+            background-color: #f8fafc;
+            padding: 20px;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .header h1 {
+            color: #1e3a8a;
+        }
+
+        .user-info {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .user-info span {
+            color: #475569;
+            font-weight: bold;
+        }
+
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.2s;
+        }
+
+        .btn-logout {
+            background-color: #ef4444;
+            color: white;
+        }
+
+        .btn-logout:hover {
+            background-color: #dc2626;
+        }
+
+        .btn-primary {
+            background-color: #2563eb;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #1d4ed8;
+        }
+
+        .btn-borrow {
+            background-color: #7c70e4;
+            color: white;
+            padding: 8px 16px;
+            font-size: 14px;
+        }
+
+        .btn-borrow:hover {
+            background-color: #6d5fb5;
+        }
+
+        .books-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .books-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .book-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .book-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .book-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #1e3a8a;
+            margin-bottom: 8px;
+        }
+
+        .book-info {
+            color: #475569;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+
+        .book-info strong {
+            color: #1e293b;
+        }
+
+        .copies-count {
+            margin: 12px 0;
+            padding: 8px;
+            border-radius: 6px;
+            background-color: #f0f9ff;
+            color: #0c4a6e;
+            font-weight: bold;
+        }
+
+        .no-copies {
+            color: #dc2626;
+            background-color: #fee2e2;
+        }
+
+        .message {
+            margin-top: 20px;
+            padding: 16px;
+            border-radius: 8px;
+            text-align: center;
+            display: none;
+        }
+
+        .message.success {
+            background-color: #d4edda;
+            color: #155724;
+            display: block;
+        }
+
+        .message.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            display: block;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #475569;
+        }
+
+        .top-nav {
+            display: flex;
+            justify-content: center;
+            gap: 14px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+
+        .top-nav a {
+            text-decoration: none;
+            color: #1e3a8a;
+            background: white;
+            border: 1px solid #cbd5e1;
+            padding: 10px 18px;
+            border-radius: 999px;
+            transition: background-color 0.2s ease;
+        }
+
+        .top-nav a:hover {
+            background: #c7d2fe;
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="top-nav">
+        <a href="index.html">Home</a>
+        <a href="Dashboard.html">Add Book</a>
+        <a href="signup&login.html">Signup / Login</a>
+    </nav>
+
+    <div class="header">
+        <h1>📚 Library Catalog</h1>
+        <div class="user-info" id="userInfo">
+            <span id="userName">Guest</span>
+            <button class="btn-logout" onclick="logout()">Logout</button>
+        </div>
+    </div>
+
+    <div class="books-container">
+        <div id="message" class="message"></div>
+        <div id="loading" class="loading">Loading books...</div>
+        <div id="booksGrid" class="books-grid"></div>
+    </div>
+
+    <script>
+        function displayMessage(text, type) {
+            const messageDiv = document.getElementById('message');
+            messageDiv.innerText = text;
+            messageDiv.className = `message ${type}`;
+            setTimeout(() => {
+                messageDiv.className = 'message';
+            }, 3000);
+        }
+
+        function logout() {
+            localStorage.removeItem('user');
+            window.location.href = '/signup&login.html';
+        }
+
+        function loadUserInfo() {
+            const user = JSON.parse(localStorage.getItem('user'));
+            if (user) {
+                document.getElementById('userName').innerText = user.firstName + ' ' + user.lastName;
+            } else {
+                window.location.href = '/signup&login.html';
+            }
+        }
+
+        async function loadBooks() {
+            const loading = document.getElementById('loading');
+            const grid = document.getElementById('booksGrid');
+            
+            try {
+                const response = await fetch('http://localhost:3000/api/books');
+                const books = await response.json();
+
+                loading.style.display = 'none';
+
+                if (!Array.isArray(books) || books.length === 0) {
+                    grid.innerHTML = '<p>No books available yet.</p>';
+                    return;
+                }
+
+                const user = JSON.parse(localStorage.getItem('user'));
+
+                grid.innerHTML = books.map(book => `
+                    <div class="book-card">
+                        <div class="book-title">${book.title}</div>
+                        <div class="book-info"><strong>Author:</strong> ${book.author}</div>
+                        <div class="book-info"><strong>ISBN:</strong> ${book.isbn}</div>
+                        <div class="book-info"><strong>Category:</strong> ${book.category}</div>
+                        <div class="copies-count ${book.copies < 1 ? 'no-copies' : ''}">
+                            Copies Available: ${book.copies}
+                        </div>
+                        <button class="btn-borrow" onclick="borrowBook('${book.isbn}', '${book.title}', ${book.copies}, ${user.id})" 
+                                ${book.copies < 1 ? 'disabled' : ''}>
+                            ${book.copies > 0 ? 'Borrow This Book' : 'Unavailable'}
+                        </button>
+                    </div>
+                `).join('');
+            } catch (error) {
+                loading.style.display = 'none';
+                displayMessage('❌ Error loading books: ' + error.message, 'error');
+            }
+        }
+
+        async function borrowBook(isbn, title, copies, userId) {
+            if (copies < 1) {
+                displayMessage('❌ This book is not available', 'error');
+                return;
+            }
+
+            const issueDate = new Date().toISOString().split('T')[0];
+            
+            try {
+                const response = await fetch('http://localhost:3000/api/borrow', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        userId,
+                        isbn,
+                        issueDate,
+                        status: 'Active'
+                    })
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    displayMessage('✅ ' + title + ' borrowed successfully!', 'success');
+                    setTimeout(() => loadBooks(), 1000);
+                } else {
+                    displayMessage('❌ Error: ' + (result.error || 'Could not borrow book'), 'error');
+                }
+            } catch (error) {
+                displayMessage('❌ Error: ' + error.message, 'error');
+            }
+        }
+
+        loadUserInfo();
+        loadBooks();
+    </script>
+</body>
+</html>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body { 
+            font-family: Arial, sans-serif; 
+            max-width: 500px; 
+            margin: 40px auto; 
+            padding: 20px; 
+            background-color: #f8fafc;
+        }
+
+        .form-card {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+            position: relative; /* Crucial context for the absolute positioning of the back arrow */
+        }
+
+        h2 {
+            margin-bottom: 20px;
+            color: #1e293b;
+        }
+
+        /* Top Left Back Arrow Styling */
+        .back-arrow {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            font-size: 20px;
+            font-weight: 900; /* Makes the arrow explicitly bold */
+            color: #2f6df6;    /* Noticeable brand blue color tint */
+            background-color: rgba(47, 109, 246, 0.1); /* Subtle background tint */
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+            user-select: none;
+        }
+
+        .back-arrow:hover {
+            background-color: rgba(47, 109, 246, 0.2);
+            transform: scale(1.08);
+            color: #1d56d4;
+        }
+
+        /* Offset title layout spacing specifically when the back arrow is present */
+        .with-arrow h2 {
+            padding-left: 48px;
+            min-height: 36px;
+            display: flex;
+            align-items: center;
+        }
+
+        .form-group { 
+            margin-bottom: 15px; 
+        }
+
+        label { 
+            display: block; 
+            margin-bottom: 6px; 
+            font-weight: bold; 
+            color: #475569;
+            font-size: 14px;
+        }
+
+        /* Base input fields defaults */
+        input { 
+            width: 100%; 
+            padding: 12px 16px; 
+            border: 1px solid #ccc; 
+            border-radius: 18px; 
+            font-size: 14px;
+            outline: none;
+        }
+
+        /* Specific text fields specs styling layout match */
+        input[type="text"], input[type="number"], input[type="date"] {
+            border-radius: 28px; 
+            border: 1px solid #779ac0; 
+            padding: 12px 16px;
+            font-size: 16px;
+            background-color: rgba(255, 255, 255, 0.9); 
+            color: #334155;
+            outline: none; 
+            transition: all 0.3s ease;
+        }
+
+        input:focus {
+            border-color: #2f6df6;
+            box-shadow: 0 0 8px rgba(47, 109, 246, 0.2);
+        }
+
+        #message { 
+            margin-top: 20px; 
+            padding: 12px; 
+            display: none; 
+            border-radius: 8px; 
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        /* Flex Layout Actions Container Row */
+        .button-row {
+            display: flex;
+            align-items: center; 
+            gap: 12px;          
+            width: 100%; 
+            margin-top: 20px;
+        }
+
+        .button-row button {
+            padding: 12px 18px;
+            font-size: 14px;
+            font-weight: bold;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        /* Submit Button Actions Layout */
+        button[type="submit"] {
+            background-color: #2f6df6;
+            color: white;
+            border-radius: 18px;
+        }
+
+        button[type="submit"]:hover {
+            background-color: #7c70e4;
+        }
+
+        /* Cancel Controls Styling */
+        .button-row button.btn-secondary {
+            background-color: #e2e8f0;
+            color: #475569;
+            border-radius: 18px;
+        }
+
+        .button-row button.btn-secondary:hover {
+            background-color: #cbd5e1;
+        }
+
+        /* Pushes components layout rightward side seamlessly */
+        #borrow-option-link {
+            margin-left: auto;
+            border-radius: 18px;
+        }
+
+        /* Borrow Action Specific Button Modifications */
+        #borrow-option-link button {
+            background-color: #7c70e4;
+            color: white;
+            border-radius: 18px;
+        }
+
+        #borrow-option-link button:hover {
+            background-color: #1d06ee;
+        }
+
+        .top-nav {
+            display: flex;
+            justify-content: center;
+            gap: 14px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+
+        .top-nav a {
+            text-decoration: none;
+            color: #1e3a8a;
+            background: rgba(255, 255, 255, 0.95);
+            border: 1px solid #cbd5e1;
+            padding: 10px 18px;
+            border-radius: 999px;
+            transition: background-color 0.2s ease;
+        }
+
+        .top-nav a:hover {
+            background: #c7d2fe;
+        }
+
+        /* Utility visibility switcher */
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="top-nav">
+        <a href="signup&login.html">Signup / Login</a>
+        <a href="Dashboard.html">Dashboard</a>
+        <a href="index.html">Home</a>
+    </nav>
+
+    <div class="form-card">
+        
+        <!-- MODULE PANEL A: ADD NEW BOOK INTERFACE -->
+        <div id="add-book-view">
+            <h2>Add a New Book to Library</h2>
+            <form id="bookForm">
+                <div class="form-group">
+                    <label for="title">Book Title</label>
+                    <input type="text" id="title" required placeholder="e.g., The Great Gatsby">
+                </div>
+                <div class="form-group">
+                    <label for="author">Author</label>
+                    <input type="text" id="author" required placeholder="e.g., F. Scott Fitzgerald">
+                </div>
+                <div class="form-group">
+                    <label for="isbn">ISBN Number</label>
+                    <input type="text" id="isbn" required placeholder="e.g., 9780743273565">
+                </div>
+                <div class="form-group">
+                    <label for="add-category">Category</label>
+                    <input type="text" id="add-category" required placeholder="e.g., fiction">
+                </div>
+                <div class="form-group">
+                    <label for="add-copies">Quantity</label>
+                    <input type="number" id="add-copies" value="1" min="1" required>
+                </div>
+                
+                <div class="button-row">
+                    <button type="submit">Submit to Database</button>
+                    <button type="button" class="btn-secondary" onclick="resetForm('bookForm')">Cancel</button> 
+                    <div id="borrow-option-link">
+                        <button type="button" class="btn-borrow" onclick="toggleInterfaceView('borrow')">Borrow</button> 
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <!--  MODULE PANEL B: BORROW TRANSACTION INTERFACE -->
+        <div id="borrow-book-view" class="hidden with-arrow">
+            <!-- Left-side Arrow pointing back to Module A -->
+            <div class="back-arrow" onclick="toggleInterfaceView('add')" title="Back to Add Book">&#8592;</div>
+            
+            <h2>Borrow from Library</h2>
+            <form id="borrowForm">
+                <div class="form-group">
+                    <label for="borrow-title">Book Title</label>
+                    <input type="text" id="borrow-title" required placeholder="e.g., The Great Gatsby">
+                </div>
+                <div class="form-group">
+                    <label for="borrow-author">Author</label>
+                    <input type="text" id="borrow-author" required placeholder="e.g., F. Scott Fitzgerald">
+                </div>
+                <div class="form-group">
+                    <label for="borrow-isbn">ISBN Number</label>
+                    <input type="text" id="borrow-isbn" required placeholder="e.g., 9780743273565">
+                </div>
+                <div class="form-group">
+                    <label for="borrow-category">Category</label>
+                    <input type="text" id="borrow-category" required placeholder="e.g., fiction">
+                </div>
+                <div class="form-group">
+                    <label for="borrow-copies">Available Copies</label>
+                    <input type="number" id="borrow-copies" value="1" min="1" required>
+                </div>
+                <div class="form-group">
+                    <label for="borrow-date">Issue Date</label>
+                    <input type="date" id="borrow-date" required>
+                </div>
+                <div class="form-group">
+                    <label for="borrow-status">Status</label>
+                    <input type="text" id="borrow-status" required placeholder="e.g., Active, Overdue, Returned">
+                </div>
+
+                <div class="button-row">
+                    <button type="submit">Submit to Database</button>
+                    <button type="button" class="btn-secondary" onclick="toggleInterfaceView('add')">Cancel</button> 
+                </div>
+            </form>
+        </div>
+
+        <!-- System Response Feedback Notification Banner Container -->
+        <div id="message"></div>
+    </div>
+
+    <script>
+        // DOM Panel Views References Tracker
+        const addBookView = document.getElementById('add-book-view');
+        const borrowBookView = document.getElementById('borrow-book-view');
+        const messageDiv = document.getElementById('message');
+
+        // Dynamic Interface View Switching Utility
+        function toggleInterfaceView(viewMode) {
+            // Automatically clear existing messages and reset input values when swapping/canceling views
+            clearMessage();
+            resetForm('bookForm');
+            resetForm('borrowForm');
+            
+            if (viewMode === 'borrow') {
+                addBookView.classList.add('hidden');
+                borrowBookView.classList.remove('hidden');
+            } else {
+                borrowBookView.classList.add('hidden');
+                addBookView.classList.remove('hidden');
+            }
+        }
+
+        // Form Resetter Utility Function
+        function resetForm(formId) {
+            document.getElementById(formId).reset();
+            clearMessage();
+        }
+
+        function clearMessage() {
+            messageDiv.style.display = 'none';
+            messageDiv.innerText = '';
+        }
+
+        // Generic Request Submission Handler Routine
+        async function handleFormSubmit(e, apiEndpoint, payloadBuilder, successMsg) {
+            e.preventDefault();
+            clearMessage();
+
+            try {
+                const response = await fetch(apiEndpoint, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payloadBuilder())
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    messageDiv.style.backgroundColor = '#d4edda';
+                    messageDiv.style.color = '#155724';
+                    messageDiv.innerText = successMsg;
+                    e.target.reset(); 
+                } else {
+                    throw new Error(result.error || "Failed data tracking processing.");
+                }
+            } catch (error) {
+                messageDiv.style.backgroundColor = '#f8d7da';
+                messageDiv.style.color = '#721c24';
+                messageDiv.innerText = "❌ Error: " + error.message;
+            }
+            
+            messageDiv.style.display = 'block';
+        }
+
+        // Event Listener binding targeting Form A: Adding Books
+        document.getElementById('bookForm').addEventListener('submit', (e) => {
+            handleFormSubmit(
+                e, 
+                'http://localhost:3000/api/books',
+                () => ({
+                    title: document.getElementById('title').value,
+                    author: document.getElementById('author').value,
+                    isbn: document.getElementById('isbn').value,
+                    category: document.getElementById('add-category').value,
+                    copies: document.getElementById('add-copies').value
+                }),
+                "🎉 Book successfully added to database!"
+            );
+        });
+
+        // Event Listener binding targeting Form B: Borrowing Transactions
+        document.getElementById('borrowForm').addEventListener('submit', (e) => {
+            handleFormSubmit(
+                e, 
+                'http://localhost:3000/api/borrow',
+                () => ({
+                    title: document.getElementById('borrow-title').value,
+                    author: document.getElementById('borrow-author').value,
+                    isbn: document.getElementById('borrow-isbn').value,
+                    category: document.getElementById('borrow-category').value,
+                    copies: document.getElementById('borrow-copies').value,
+                    issueDate: document.getElementById('borrow-date').value,
+                    status: document.getElementById('borrow-status').value
+                }),
+                "📘 Borrow log transaction successfully processed!"
+            );
+        });
+    </script>
+</body>
+</html>
